@@ -1,0 +1,26 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - TestMain0",
+            "request": "launch",
+            "mainClass": "test.TestMain0",
+            "projectName": "RFTX2_8dfb3bfb"
+        },
+        {
+            "name": "GoLaunch",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "remotePath": "",
+            "port": 2345,
+            "host": "127.0.0.1",
+            "program": "${fileDirname}",
+            "env": {
+                "GOPATH": "C:\\Users\\Rock Chin\\go"
+            },
+            "args": [],
+            "showLog": true
+        }
+    ]
+}
