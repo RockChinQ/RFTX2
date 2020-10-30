@@ -2,6 +2,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "CodeLens (Launch) - CountLine",
+            "request": "launch",
+            "mainClass": "test.CountLine",
+            "projectName": "RFTX2_8dfb3bfb"
+        },
+        {
+            "type": "java",
             "name": "CodeLens (Launch) - TestMain0",
             "request": "launch",
             "mainClass": "test.TestMain0",

@@ -33,7 +33,7 @@ public class ControlConn extends AbstractConn {
                     //post <taskToken> <sendPath> <recvPath> <fromOSCode>
                     //get <taskToken> <sendPath> <recvPath> <fromOSCode>
                     case "post":{
-                        FileTaskInfo info=new FileTaskInfo();
+                        var info = new FileTaskInfo();
                         info.taskToken=cmd[1];
                         info.localPath=cmd[3];
                         info.remotePath=cmd[2];
