@@ -63,6 +63,7 @@ public class TransportConn extends AbstractConn {
                 int len=0;
                 while((len=fileIn.read(buffer, 0, 1024))!=-1){
                     writer.write(buffer, 0, len);
+                    info.progress+=len;
                 }
                 fileIn.close();
                 writer.close();
@@ -81,11 +82,13 @@ public class TransportConn extends AbstractConn {
                 int len=0;
                 while((len=reader.read(buffer, 0, 1024))!=-1){
                     fileOut.write(buffer, 0, len);
+                    info.progress+=len;
                 }
                 //close
                 fileOut.close();
                 this.reader.close();
             }catch(Exception e){e.printStackTrace();}
         }
+        host.transportConns.remove(this);
     }
 }

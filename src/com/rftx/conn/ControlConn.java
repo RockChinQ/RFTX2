@@ -2,31 +2,55 @@ package com.rftx.conn;
 
 import com.rftx.core.FileTaskInfo;
 import com.rftx.core.RFTXHost;
+import com.rftx.exception.PeerIdentityException;
 import com.rftx.util.BasicInfo;
 
 public class ControlConn extends AbstractConn {
     boolean authed=false;
     String token="";
+    String peerName;
     int identity=-1;
     public static final int CLIENT=0,SERVER=1;
     public ControlConn(RFTXHost host,int identity){
         this.host=host;
         this.identity=identity;
     }
+    public void post(String taskToken,String localFile,String remoteFile){
+        
+    }
     @Override
     public void run() {
         byte[] buffer=new byte[1024];
         try{
-            writer.writeInt(BasicInfo.CONNTYPE_CONTROL);
-            host.getAuthenticator().send(this);
+            if(identity==CLIENT){
+                writer.writeInt(BasicInfo.CONNTYPE_CONTROL);
+                host.getAuthenticator().send(this);
+            }
+            writeMsg("name "+host.hostName);
             while(getReader().read(buffer,0,1024)!=-1){
                 String msg=new String(buffer);
                 String[] cmd=msg.split(" ");
                 switch(cmd[0]){
+                    case "name":{
+                        peerName=cmd[1];
+                        break;
+                    }
                     //server specific
                     case "auth":{
-                        token=cmd[1];
-                        authed=host.getAuthenticator().auth(cmd[1]);
+                        if(identity==SERVER){
+                            token=cmd[1];
+                            authed=host.getAuthenticator().auth(cmd[1]);
+                        }else if(identity==CLIENT){
+                            throw new PeerIdentityException("illegal auth msg from server");
+                        }
+                        break;
+                    }
+                    //client specific
+                    case "authSuc":{
+                        if(identity==CLIENT)
+                            authed=true;
+                        else if(identity==SERVER)
+                            throw new PeerIdentityException("illegal authSuc msg from a client:client ip:"+socket.getInetAddress());
                         break;
                     }
                     //post <taskToken> <sendPath> <recvPath> <fromOSCode>
@@ -81,6 +105,8 @@ public class ControlConn extends AbstractConn {
                     }
                 }
             }
-        }catch(Exception e){}
+        }catch(Exception e){
+            host.controlConns.remove(this);
+        }
     }
 }

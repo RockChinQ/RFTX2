@@ -7,4 +7,6 @@ public class FileTaskInfo {
     
     public String remoteOSCode;
     public String remotePath;
+
+    public long progress;
 }

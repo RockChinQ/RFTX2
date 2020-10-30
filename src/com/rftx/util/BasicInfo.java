@@ -2,7 +2,6 @@ package com.rftx.util;
 
 import java.util.ArrayList;
 
-import com.rftx.conn.AbstractConn;
 import com.rftx.conn.TransportConn;
 
 public class BasicInfo {

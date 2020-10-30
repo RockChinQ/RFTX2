@@ -12,7 +12,7 @@ public class RFTXHost {
     public ArrayList<TransportConn> transportConns=new ArrayList<>();
 
     //basic info 
-    String hostName="";
+    public String hostName="";
     //Client and server
     RFTXClient client;
     RFTXServer server;
@@ -21,13 +21,19 @@ public class RFTXHost {
     RFTXHost(String hostName){
         this.hostName=hostName;
     }
-    public void initClient(){
+    public RFTXClient initClient(){
         this.client=new RFTXClient(this);
+        return this.client;
     }
-    public void initServer(){
-        this.server=new RFTXServer(this);
+    public RFTXServer initServer(int port)throws Exception{
+        this.server=new RFTXServer(this,port);
+        return this.server;
     }
     public TokenAuthenticator getAuthenticator(){
         return authenticator;
+    }
+    //opers
+    public void post(String taskToken,String localFile,String remoteFile){
+        
     }
 }
