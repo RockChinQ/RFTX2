@@ -7,9 +7,9 @@ import com.rftx.conn.DefaultConn;
 import com.rftx.conn.TransportConn;
 
 public class RFTXHost {
-    ArrayList<DefaultConn> defaultConns=new ArrayList<>();
-    ArrayList<ControlConn> controlConns=new ArrayList<>();
-    ArrayList<TransportConn> transportConns=new ArrayList<>();
+    public ArrayList<DefaultConn> defaultConns=new ArrayList<>();
+    public ArrayList<ControlConn> controlConns=new ArrayList<>();
+    public ArrayList<TransportConn> transportConns=new ArrayList<>();
 
     //basic info 
     String hostName="";

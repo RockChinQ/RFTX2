@@ -12,24 +12,25 @@ import com.rftx.core.RFTXHost;
 import com.rftx.util.BasicInfo;
 
 public class TransportConn extends AbstractConn {
-    FileTaskInfo info = new FileTaskInfo();
+    public FileTaskInfo info = new FileTaskInfo();
     int identity = -1;
     public static final int SENDER = 0, RECEIVER = 1;
     private String addr;
     private int port;
-
+    private boolean readyToRun=false;
     public TransportConn(RFTXHost host, int identity, FileTaskInfo info, String addr, int port) {
         this.host = host;
         this.identity = identity;
         this.addr = addr;
         this.port = port;
-        
+        readyToRun=true;
     }
-
-    public TransportConn(RFTXHost host, int identity, FileTaskInfo info) {
+    //use when server accepted and confirmed a transportConn
+    //set info to UNREADY will make thread to wait
+    public TransportConn(RFTXHost host, int identity) {
         this.host = host;
         this.identity = identity;
-        this.info = info;
+        readyToRun=false;
     }
 
     @Override
@@ -51,6 +52,10 @@ public class TransportConn extends AbstractConn {
         }
         if(identity==SENDER){
             try{
+                synchronized(this){
+                    if(!readyToRun)
+                        wait();
+                }
                 writer.writeLong(new File(info.localPath).length());
                 //打开localfile的输入流,向socket发送
                 DataInputStream fileIn=new DataInputStream(new FileInputStream(new File(info.localPath)));
@@ -64,10 +69,11 @@ public class TransportConn extends AbstractConn {
             }catch(Exception e){e.printStackTrace();}
         }else if(identity==RECEIVER){
             try{
-                info.size=reader.readLong();
                 synchronized(this){
-                    wait();
+                    if(!readyToRun)
+                        wait();
                 }
+                info.size=reader.readLong();
                 //open file
                 DataOutputStream fileOut=new DataOutputStream(new FileOutputStream(new File(info.localPath)));
                 //loop read and write

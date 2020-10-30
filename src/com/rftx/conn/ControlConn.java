@@ -16,11 +16,10 @@ public class ControlConn extends AbstractConn {
     @Override
     public void run() {
         byte[] buffer=new byte[1024];
-        int len;
         try{
-            writer.writeInt(0);
+            writer.writeInt(BasicInfo.CONNTYPE_CONTROL);
             host.getAuthenticator().send(this);
-            readMsg:while((len=getReader().read(buffer,0,1024))!=-1){
+            while(getReader().read(buffer,0,1024)!=-1){
                 String msg=new String(buffer);
                 String[] cmd=msg.split(" ");
                 switch(cmd[0]){
@@ -45,7 +44,15 @@ public class ControlConn extends AbstractConn {
                             transportConn.getProxyThread().start();
                             writeMsg("get "+info.taskToken+" "+info.remotePath+" "+info.localPath+" "+BasicInfo.getOSName().replace(" ", "?"));
                         }else if(identity==SERVER){
-                            
+                            //index TransportConn and set file info
+                            //server is a recveiver here!!!!
+                            synchronized(host.transportConns){
+                                var transportConn=BasicInfo.indexTransportConnByTaskToken(host.transportConns, info.taskToken);
+                                transportConn.info=info;
+                                synchronized(transportConn){
+                                    transportConn.notify();
+                                }
+                            }
                         }
                         break;
                     }
@@ -58,8 +65,17 @@ public class ControlConn extends AbstractConn {
                         if(identity==CLIENT){
                             TransportConn transportConn=new TransportConn(host,TransportConn.SENDER,info,socket.getInetAddress().getHostAddress(),socket.getPort());
                             transportConn.getProxyThread().start();
+                            //send POST
+                            writeMsg("post "+info.taskToken+" "+info.localPath+" "+info.remotePath+" "+BasicInfo.getOSName().replace(" ", "?"));
                         }else if(identity==SERVER){
-                            
+                            //server is a sender here!!!!!
+                            synchronized(host.transportConns){
+                                var transportConn=BasicInfo.indexTransportConnByTaskToken(host.transportConns, info.taskToken);
+                                transportConn.info=info;
+                                synchronized(transportConn){
+                                    transportConn.notify();
+                                }
+                            }
                         }
                         break;
                     }
