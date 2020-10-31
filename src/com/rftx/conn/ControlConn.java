@@ -7,6 +7,7 @@ import com.rftx.core.FileTaskInfo;
 import com.rftx.core.RFTXHost;
 import com.rftx.exception.AuthenticateException;
 import com.rftx.exception.PeerIdentityException;
+import com.rftx.exception.PeerProcessException;
 import com.rftx.util.BasicInfo;
 import com.rftx.util.Debugger;
 
@@ -41,9 +42,9 @@ public class ControlConn extends AbstractConn {
                     this.wait();
                 }
                 Debugger.say("SEND post msg");
-                writeMsg("post "+taskToken+" "+localFile+" "+remoteFile+" "+BasicInfo.getOSName().replaceAll(" ", "?"));
+                writeMsg("post "+taskToken+" "+localFile.replaceAll(" ", "?")+" "+remoteFile.replaceAll(" ", "?")+" "+BasicInfo.getOSName().replaceAll(" ", "?"));
             }else if(identity==SERVER){
-                writeMsg("post "+taskToken+" "+localFile+" "+remoteFile+" "+BasicInfo.getOSName().replaceAll(" ", "?"));
+                writeMsg("post "+taskToken+" "+localFile.replaceAll(" ", "?")+" "+remoteFile.replaceAll(" ", "?")+" "+BasicInfo.getOSName().replaceAll(" ", "?"));
             }
         } 
     }
@@ -66,9 +67,9 @@ public class ControlConn extends AbstractConn {
                     this.wait();
                 }
                 Debugger.say("SEND get msg");
-                writeMsg("get "+taskToken+" "+remoteFile+" "+localFile+" "+BasicInfo.getOSName().replaceAll(" ", "?"));
+                writeMsg("get "+taskToken+" "+remoteFile.replaceAll(" ", "?")+" "+localFile.replaceAll(" ", "?")+" "+BasicInfo.getOSName().replaceAll(" ", "?"));
             }else if(identity==SERVER){
-                writeMsg("get "+taskToken+" "+remoteFile+" "+localFile+" "+BasicInfo.getOSName().replaceAll(" ", "?"));
+                writeMsg("get "+taskToken+" "+remoteFile.replaceAll(" ", "?")+" "+localFile.replaceAll(" ", "?")+" "+BasicInfo.getOSName().replaceAll(" ", "?"));
             }
         }
     }
@@ -98,10 +99,13 @@ public class ControlConn extends AbstractConn {
                     case "auth":{
                         if(identity==SERVER){
                             token=cmd[1];
-                            authed=host.getAuthenticator().auth(cmd[1]);
-                            Debugger.say("auth result:"+authed);
+                            authed=host.getAuthenticator().auth(cmd[1].replaceAll("\u0000", ""));
+                            Debugger.say("auth result:"+authed+" "+host.getAuthenticator().getAuthTokenMap().get("testClient"));
                             if(!authed){
+                                writeMsg("authFai");
                                 throw new AuthenticateException("invalid auth token:"+cmd[1]+" from:"+socket.getInetAddress());
+                            }else{
+                                writeMsg("authSuc");
                             }
                         }else if(identity==CLIENT){
                             throw new PeerIdentityException("illegal auth msg from server");
@@ -156,6 +160,7 @@ public class ControlConn extends AbstractConn {
                             synchronized(host.transportConns){
                                 var transportConn=BasicInfo.indexTransportConnByTaskToken(host.transportConns, info.taskToken);
                                 transportConn.info=info;
+                                transportConn.controlConnToNotify=this;
                                 synchronized(transportConn){
                                     transportConn.notify();
                                 }
@@ -191,11 +196,16 @@ public class ControlConn extends AbstractConn {
                             synchronized(host.transportConns){
                                 var transportConn=BasicInfo.indexTransportConnByTaskToken(host.transportConns, info.taskToken);
                                 transportConn.info=info;
+                                transportConn.controlConnToNotify=this;
                                 synchronized(transportConn){
                                     transportConn.notify();
                                 }
                             }
                         }
+                        break;
+                    }
+                    case "err":{
+                        host.throwException(new PeerProcessException(msg.substring(4)));
                         break;
                     }
                 }

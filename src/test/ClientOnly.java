@@ -1,5 +1,6 @@
 package test;
 
+import com.rftx.conn.TransportConn;
 import com.rftx.core.RFTXHost;
 import com.rftx.util.Debugger;
 

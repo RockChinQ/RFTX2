@@ -12,6 +12,7 @@ import com.rftx.util.BasicInfo;
 import com.rftx.util.Debugger;
 
 public class TransportConn extends AbstractConn {
+    public static int transBufferSize=65536;
     public FileTaskInfo info = new FileTaskInfo();
     int identity = -1;
     public static final int SENDER = 0, RECEIVER = 1;
@@ -66,6 +67,7 @@ public class TransportConn extends AbstractConn {
                 }
             }
         }
+        this.getProxyThread().setName(info.taskToken);
         if(identity==SENDER){
             try{
                 synchronized(this){
@@ -74,18 +76,39 @@ public class TransportConn extends AbstractConn {
                 }
                 writer.writeLong(new File(info.localPath).length());
                 //打开localfile的输入流,向socket发送
-                
-                DataInputStream fileIn=new DataInputStream(new FileInputStream(new File(info.localPath)));
-                byte[] buffer=new byte[1024];
+                DataInputStream fileIn;
+                try{
+                    fileIn=new DataInputStream(new FileInputStream(new File(info.localPath.replaceAll("\\?", " "))));
+                }catch(Exception e){
+                    writeMsg("err");
+                    throw e;
+                }
+                //成功打开则发送成功的确认消息
+                writeMsg("sucIn");
+                String fileConfim=reader.readUTF();
+                if(fileConfim.equals("err")){
+                    host.transportConns.remove(this);
+                    return;
+                }
+                byte[] buffer=new byte[transBufferSize];
                 int len=0;
-                while((len=fileIn.read(buffer, 0, 1024))!=-1){
+                while((len=fileIn.read(buffer, 0, transBufferSize))!=-1){
                     writer.write(buffer, 0, len);
                     info.progress+=len;
                 }
+                Debugger.say("close file");
+                host.transportConns.remove(this);
                 fileIn.close();
                 writer.close();
             }catch(Exception e){
                 host.throwException(e);
+                Debugger.say(BasicInfo.getErrorInfo(e));
+                try{
+                    controlConnToNotify.writeMsg("err "+e.getMessage());
+                    this.writer.close();
+                }catch(Exception e0){
+                }
+                host.transportConns.remove(this);
             }
         }else if(identity==RECEIVER){
             try{
@@ -94,25 +117,56 @@ public class TransportConn extends AbstractConn {
                         wait();
                 }
                 info.size=reader.readLong();
-                //open file
-                DataOutputStream fileOut=new DataOutputStream(new FileOutputStream(new File(info.localPath)));
+                //confirm before create file to avoid empty file
+                String fileConfim=reader.readUTF();
+                if(fileConfim.equals("err")){
+                    host.transportConns.remove(this);
+                    return;
+                }
+                DataOutputStream fileOut;
+                try{
+                    //check dir
+                    File outf=new File(info.localPath.replaceAll("\\?", " "));
+                    char sep=File.separatorChar;
+                    // if(sep=='/'){
+                    //     int index=info.localPath.lastIndexOf("/");
+                    //     new File(info.localPath.substring(0,index).replaceAll("\\?", " ")).mkdirs();
+                    // }else if(sep=='\\'){
+                    //     int index=info.localPath.lastIndexOf("\\");
+                    //     new File(info.localPath.substring(0,index).replaceAll("\\?", " ")).mkdirs();
+                    // }
+                    Debugger.say("path sep:"+sep);
+                    int index=info.localPath.lastIndexOf(""+sep);
+                    new File(info.localPath.substring(0,index).replaceAll("\\?", " ")).mkdirs();
+                    //open file
+                    fileOut=new DataOutputStream(new FileOutputStream(outf));
+                }catch(Exception e){
+                    writeMsg("err");
+                    throw e;
+                }
+                //成功打开
+                writeMsg("sucOut");
                 //loop read and write
-                byte[] buffer=new byte[1024];
+                byte[] buffer=new byte[transBufferSize];
                 int len=0;
-                while((len=reader.read(buffer, 0, 1024))!=-1){
+                while((len=reader.read(buffer, 0, transBufferSize))!=-1){
                     fileOut.write(buffer, 0, len);
                     info.progress+=len;
                 }
+                Debugger.say("close file");
+                host.transportConns.remove(this);
                 //close
                 fileOut.close();
                 this.reader.close();
             }catch(Exception e){
                 host.throwException(e);
+                Debugger.say(BasicInfo.getErrorInfo(e));
                 try{
-                    controlConnToNotify.writeMsg("err "+BasicInfo.getErrorInfo(e));
+                    controlConnToNotify.writeMsg("err "+e.getMessage());
+                    this.reader.close();
                 }catch(Exception e0){}
+                host.transportConns.remove(this);
             }
         }
-        host.transportConns.remove(this);
     }
 }

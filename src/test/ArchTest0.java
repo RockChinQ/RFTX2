@@ -15,6 +15,6 @@ public class ArchTest0 {
         host1.client.connect("localhost", 3000,"testClientToken");
         //send file
         Thread.sleep(2000);
-        host.post("TestClient", "testFile", "transportTest.txt", "TransportTest2.txt");
+        host.get("TestClient", "testFile", "transportTest.txt", "TransportTest2.txt");
     }
 }

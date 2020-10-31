@@ -15,7 +15,7 @@ public class TokenAuthenticator implements IAuthenticator {
     }
     @Override
     public boolean auth(String msg)throws Exception{
-        if(authTokens.containsKey(msg)){
+        if(authTokens.containsValue(msg)){
             return true;
         }
         return false;
