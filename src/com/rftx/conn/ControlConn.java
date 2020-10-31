@@ -1,12 +1,11 @@
 package com.rftx.conn;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.net.Socket;
 
 import com.rftx.core.FileTaskInfo;
 import com.rftx.core.RFTXHost;
+import com.rftx.exception.AuthenticateException;
 import com.rftx.exception.PeerIdentityException;
 import com.rftx.util.BasicInfo;
 import com.rftx.util.Debugger;
@@ -30,7 +29,7 @@ public class ControlConn extends AbstractConn {
                 info.size=new File(localFile).length();
                 info.remotePath=remoteFile;
                 info.progress=0;
-                var transportConn=new TransportConn(host, TransportConn.SENDER,info,socket.getInetAddress().getHostAddress(),socket.getPort(),this);
+                var transportConn=new TransportConn(host, TransportConn.SENDER,info,this);
                 transportConn.launchByClient=true;
                 host.transportConns.add(transportConn);
                 //create conn for this
@@ -56,7 +55,7 @@ public class ControlConn extends AbstractConn {
                 info.localPath=localFile;
                 info.remotePath=remoteFile;
                 info.progress=0;
-                var transportConn=new TransportConn(host, TransportConn.RECEIVER,info,socket.getInetAddress().getHostAddress(),socket.getPort(),this);
+                var transportConn=new TransportConn(host, TransportConn.RECEIVER,info,this);
                 transportConn.launchByClient=true;
                 host.transportConns.add(transportConn);
                 //create conn for this
@@ -76,7 +75,6 @@ public class ControlConn extends AbstractConn {
     @Override
     public void run() {
         Debugger.say("control conn start:"+(identity==SERVER?"SERVER":"CLIENT"));
-        byte[] buffer=new byte[1024];
         try{
             synchronized(this){
                 if(identity==CLIENT){
@@ -102,6 +100,9 @@ public class ControlConn extends AbstractConn {
                             token=cmd[1];
                             authed=host.getAuthenticator().auth(cmd[1]);
                             Debugger.say("auth result:"+authed);
+                            if(!authed){
+                                throw new AuthenticateException("invalid auth token:"+cmd[1]+" from:"+socket.getInetAddress());
+                            }
                         }else if(identity==CLIENT){
                             throw new PeerIdentityException("illegal auth msg from server");
                         }
@@ -115,9 +116,20 @@ public class ControlConn extends AbstractConn {
                             throw new PeerIdentityException("illegal authSuc msg from a client:client ip:"+socket.getInetAddress());
                         break;
                     }
+                    case "authFai":{
+                        if(identity==CLIENT){
+                            throw new AuthenticateException("auth failed,token:"+host.getAuthenticator().clientToken);
+                        }else if (identity==SERVER){
+                            throw new PeerIdentityException("illegal authFai msg from a client:client ip:"+socket.getInetAddress());
+                        }
+                        break;
+                    }
                     //post <taskToken> <sendPath> <recvPath> <fromOSCode>
                     //get <taskToken> <sendPath> <recvPath> <fromOSCode>
                     case "post":{
+                        if(!authed){
+                            break;
+                        }
                         var info = new FileTaskInfo();
                         info.taskToken=cmd[1];
                         info.localPath=cmd[3];
@@ -125,7 +137,7 @@ public class ControlConn extends AbstractConn {
                         info.remoteOSCode=cmd[4];
                         if(identity==CLIENT){
                             //send GET
-                            TransportConn transportConn=new TransportConn(host,TransportConn.RECEIVER,info,socket.getInetAddress().getHostAddress(),socket.getPort(),this);
+                            TransportConn transportConn=new TransportConn(host,TransportConn.RECEIVER,info,this);
                             transportConn.launchByClient=true;
                             host.transportConns.add(transportConn);
                             //create conn for this
@@ -152,13 +164,16 @@ public class ControlConn extends AbstractConn {
                         break;
                     }
                     case "get":{
+                        if(!authed){
+                            break;
+                        }
                         FileTaskInfo info=new FileTaskInfo();
                         info.taskToken=cmd[1];
                         info.localPath=cmd[2];
                         info.remotePath=cmd[3];
                         info.remoteOSCode=cmd[4];
                         if(identity==CLIENT){
-                            TransportConn transportConn=new TransportConn(host,TransportConn.SENDER,info,socket.getInetAddress().getHostAddress(),socket.getPort(),this);
+                            TransportConn transportConn=new TransportConn(host,TransportConn.SENDER,info,this);
                             transportConn.launchByClient=true;
                             host.transportConns.add(transportConn);
                             //create conn for this
@@ -186,7 +201,7 @@ public class ControlConn extends AbstractConn {
                 }
             }
         }catch(Exception e){
-            Debugger.say(BasicInfo.getErrorInfo(e));
+            host.throwException(e);
             host.controlConns.remove(this);
         }
         try{

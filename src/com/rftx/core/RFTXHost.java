@@ -1,5 +1,6 @@
 package com.rftx.core;
 
+import java.beans.ExceptionListener;
 import java.util.ArrayList;
 import com.rftx.auth.TokenAuthenticator;
 import com.rftx.conn.ControlConn;
@@ -19,6 +20,8 @@ public class RFTXHost {
     public RFTXServer server;
     //auth
     TokenAuthenticator authenticator=new TokenAuthenticator();
+    //exception
+    ExceptionListener exceptionListener;
     public RFTXHost(String hostName){
         this.hostName=hostName;
     }
@@ -38,5 +41,16 @@ public class RFTXHost {
     }
     public synchronized void get(String peerName,String taskToken,String localFile,String remoteFile)throws Exception{
         BasicInfo.indexControlConnByPeerName(controlConns, peerName).get(taskToken, localFile, remoteFile);
+    }
+    public void setExceptionListener(ExceptionListener listener){
+        this.exceptionListener=listener;
+    }
+    public ExceptionListener getExceptionListener(){
+        return this.exceptionListener;
+    }
+    public void throwException(Exception e){
+        if(getExceptionListener()!=null){
+            getExceptionListener().exceptionThrown(e);
+        }
     }
 }

@@ -15,16 +15,12 @@ public class TransportConn extends AbstractConn {
     public FileTaskInfo info = new FileTaskInfo();
     int identity = -1;
     public static final int SENDER = 0, RECEIVER = 1;
-    private String addr;
-    private int port;
     private boolean readyToRun=false;
     public boolean launchByClient=false;
     ControlConn controlConnToNotify;
-    public TransportConn(RFTXHost host, int identity, FileTaskInfo info, String addr, int port,ControlConn controlConnToNotify) {
+    public TransportConn(RFTXHost host, int identity, FileTaskInfo info,ControlConn controlConnToNotify) {
         this.host = host;
         this.identity = identity;
-        this.addr = addr;
-        this.port = port;
         this.info=info;
         this.controlConnToNotify=controlConnToNotify;
         readyToRun=true;
@@ -50,7 +46,11 @@ public class TransportConn extends AbstractConn {
                     synchronized(controlConnToNotify){
                         controlConnToNotify.notify();
                     }
-                }catch(Exception e){e.printStackTrace();}
+                }catch(Exception e){
+                    host.throwException(e);
+                    host.transportConns.remove(this);
+                    return;
+                }
             }else{
                 try{
                     String taskToken=reader.readUTF();
@@ -59,7 +59,11 @@ public class TransportConn extends AbstractConn {
                     Debugger.say("sending confirm");
                     writeMsg("confirmToken\n");
                     Debugger.say("token confirmed");
-                }catch(Exception e){e.printStackTrace();}
+                }catch(Exception e){
+                    host.throwException(e);
+                    host.transportConns.remove(this);
+                    return;
+                }
             }
         }
         if(identity==SENDER){
@@ -70,6 +74,7 @@ public class TransportConn extends AbstractConn {
                 }
                 writer.writeLong(new File(info.localPath).length());
                 //打开localfile的输入流,向socket发送
+                
                 DataInputStream fileIn=new DataInputStream(new FileInputStream(new File(info.localPath)));
                 byte[] buffer=new byte[1024];
                 int len=0;
@@ -79,7 +84,9 @@ public class TransportConn extends AbstractConn {
                 }
                 fileIn.close();
                 writer.close();
-            }catch(Exception e){e.printStackTrace();}
+            }catch(Exception e){
+                host.throwException(e);
+            }
         }else if(identity==RECEIVER){
             try{
                 synchronized(this){
@@ -99,7 +106,12 @@ public class TransportConn extends AbstractConn {
                 //close
                 fileOut.close();
                 this.reader.close();
-            }catch(Exception e){e.printStackTrace();}
+            }catch(Exception e){
+                host.throwException(e);
+                try{
+                    controlConnToNotify.writeMsg("err "+BasicInfo.getErrorInfo(e));
+                }catch(Exception e0){}
+            }
         }
         host.transportConns.remove(this);
     }

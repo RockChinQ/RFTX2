@@ -48,10 +48,12 @@ public class DefaultConn extends AbstractConn{
                     break;
                 }
                 default:{
-                    throw new PeerIdentityException("cannot identify the type of conn:"+type);
+                    throw new PeerIdentityException("cannot identify the type of conn:"+type+" ip:"+socket.getInetAddress());
                 }
             }
-        }catch(Exception e){}
+        }catch(Exception e){
+            host.throwException(e);
+        }
         host.defaultConns.remove(this);
     }
 
