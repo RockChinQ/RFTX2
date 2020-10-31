@@ -14,11 +14,11 @@ public class RFTXHost {
     //basic info 
     public String hostName="";
     //Client and server
-    RFTXClient client;
-    RFTXServer server;
+    public RFTXClient client;
+    public RFTXServer server;
     //auth
     TokenAuthenticator authenticator=new TokenAuthenticator();
-    RFTXHost(String hostName){
+    public RFTXHost(String hostName){
         this.hostName=hostName;
     }
     public RFTXClient initClient(){
@@ -31,9 +31,5 @@ public class RFTXHost {
     }
     public TokenAuthenticator getAuthenticator(){
         return authenticator;
-    }
-    //opers
-    public void post(String taskToken,String localFile,String remoteFile){
-        
     }
 }

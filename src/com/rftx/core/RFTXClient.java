@@ -12,9 +12,10 @@ public class RFTXClient {
     /**
      * connect a RFTX server
      */
-    public void connect(String addr,int port)throws Exception{
+    public void connect(String addr,int port,String useToken)throws Exception{
         Socket clientSocket=new Socket(addr, port);
         ControlConn conn=new ControlConn(host,ControlConn.CLIENT);
+        host.getAuthenticator().clientToken=useToken;
         conn.setSocket(clientSocket);
         conn.initRW();
         host.controlConns.add(conn);

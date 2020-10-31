@@ -18,6 +18,7 @@ public class TransportConn extends AbstractConn {
     private String addr;
     private int port;
     private boolean readyToRun=false;
+    public boolean launchByClient=false;
     public TransportConn(RFTXHost host, int identity, FileTaskInfo info, String addr, int port) {
         this.host = host;
         this.identity = identity;
@@ -32,15 +33,11 @@ public class TransportConn extends AbstractConn {
         this.identity = identity;
         readyToRun=false;
     }
-
     @Override
     public void run() {
         //如果socket是null，则一定是由client发起连接
-        if(getSocket()==null){
+        if(launchByClient){
             try{
-                socket=new Socket(addr,port);
-                writer=new DataOutputStream(socket.getOutputStream());
-                reader=new DataInputStream(socket.getInputStream());
                 writer.writeInt(identity==RECEIVER?BasicInfo.CONNTYPE_SERVER_SEND:BasicInfo.CONNTYPE_SERVER_RECV);
                 writer.writeUTF(info.taskToken);
             }catch(Exception e){e.printStackTrace();}

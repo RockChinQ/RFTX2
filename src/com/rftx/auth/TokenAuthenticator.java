@@ -7,9 +7,12 @@ import com.rftx.conn.AbstractConn;
 
 public class TokenAuthenticator implements IAuthenticator {
     //host token,as client;
-    String clientToken="";
+    public String clientToken="";
     //tokens list,as server
     HashMap<String,String> authTokens=new HashMap<>();
+    public HashMap<String,String> getAuthTokenMap(){
+        return authTokens;
+    }
     @Override
     public boolean auth(String msg)throws Exception{
         if(authTokens.containsKey(msg)){
@@ -19,7 +22,6 @@ public class TokenAuthenticator implements IAuthenticator {
     }
     @Override
     public void send(AbstractConn conn) throws Exception {
-        conn.getWriter().write(("!auth "+clientToken).getBytes(StandardCharsets.UTF_8));
-        conn.getWriter().flush();
+        conn.writeMsg("auth "+clientToken);
     }
 }

@@ -4,6 +4,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 import com.rftx.conn.DefaultConn;
+import com.rftx.util.Debugger;
 
 public class RFTXServer implements Runnable{
     RFTXHost host;
@@ -25,6 +26,7 @@ public class RFTXServer implements Runnable{
 
     @Override
     public void run(){
+        Debugger.say("Accepting...");
         while(true){
             try{
                 Socket newSocket=serverSocket.accept();

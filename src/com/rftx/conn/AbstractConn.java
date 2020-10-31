@@ -34,11 +34,11 @@ public abstract class AbstractConn implements Runnable{
         this.reader=new DataInputStream(socket.getInputStream());
         this.writer=new DataOutputStream(socket.getOutputStream());
     }
-    protected void writeMsg(String msg)throws Exception{
-        getWriter().write(msg.getBytes(StandardCharsets.UTF_8));
+    public void writeMsg(String msg)throws Exception{
+        getWriter().writeUTF(msg);
         getWriter().flush();
     }
-    protected void writeMsgIgnoreException(String msg){
+    public void writeMsgIgnoreException(String msg){
         try{
             writeMsg(msg);
         }catch(Exception ignored){}
