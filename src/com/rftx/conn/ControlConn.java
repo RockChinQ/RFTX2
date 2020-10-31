@@ -14,7 +14,7 @@ import com.rftx.util.Debugger;
 public class ControlConn extends AbstractConn {
     boolean authed=false;
     String token="";
-    public String peerName;
+    public String peerName="";
     int identity=-1;
     public static final int CLIENT=0,SERVER=1;
     public ControlConn(RFTXHost host,int identity){
@@ -30,7 +30,7 @@ public class ControlConn extends AbstractConn {
                 info.size=new File(localFile).length();
                 info.remotePath=remoteFile;
                 info.progress=0;
-                var transportConn=new TransportConn(host, TransportConn.SENDER,info,socket.getInetAddress().getHostAddress(),socket.getPort());
+                var transportConn=new TransportConn(host, TransportConn.SENDER,info,socket.getInetAddress().getHostAddress(),socket.getPort(),this);
                 transportConn.launchByClient=true;
                 host.transportConns.add(transportConn);
                 //create conn for this
@@ -38,6 +38,10 @@ public class ControlConn extends AbstractConn {
                 transportConn.initRW();
 
                 transportConn.getProxyThread().start();
+                synchronized(this){
+                    this.wait();
+                }
+                Debugger.say("SEND post msg");
                 writeMsg("post "+taskToken+" "+localFile+" "+remoteFile+" "+BasicInfo.getOSName().replaceAll(" ", "?"));
             }else if(identity==SERVER){
                 writeMsg("post "+taskToken+" "+localFile+" "+remoteFile+" "+BasicInfo.getOSName().replaceAll(" ", "?"));
@@ -52,16 +56,20 @@ public class ControlConn extends AbstractConn {
                 info.localPath=localFile;
                 info.remotePath=remoteFile;
                 info.progress=0;
-                var transportConn=new TransportConn(host, TransportConn.RECEIVER,info,socket.getInetAddress().getHostAddress(),socket.getPort());
+                var transportConn=new TransportConn(host, TransportConn.RECEIVER,info,socket.getInetAddress().getHostAddress(),socket.getPort(),this);
                 transportConn.launchByClient=true;
                 host.transportConns.add(transportConn);
                 //create conn for this
                 transportConn.socket=new Socket(this.socket.getInetAddress().getHostAddress(),this.socket.getPort());
                 transportConn.initRW();
                 transportConn.getProxyThread().start();
-                writeMsg("get "+taskToken+" "+localFile+" "+remoteFile+" "+BasicInfo.getOSName().replaceAll(" ", "?"));
+                synchronized(this){
+                    this.wait();
+                }
+                Debugger.say("SEND get msg");
+                writeMsg("get "+taskToken+" "+remoteFile+" "+localFile+" "+BasicInfo.getOSName().replaceAll(" ", "?"));
             }else if(identity==SERVER){
-                writeMsg("get "+taskToken+" "+localFile+" "+remoteFile+" "+BasicInfo.getOSName().replaceAll(" ", "?"));
+                writeMsg("get "+taskToken+" "+remoteFile+" "+localFile+" "+BasicInfo.getOSName().replaceAll(" ", "?"));
             }
         }
     }
@@ -93,6 +101,7 @@ public class ControlConn extends AbstractConn {
                         if(identity==SERVER){
                             token=cmd[1];
                             authed=host.getAuthenticator().auth(cmd[1]);
+                            Debugger.say("auth result:"+authed);
                         }else if(identity==CLIENT){
                             throw new PeerIdentityException("illegal auth msg from server");
                         }
@@ -116,7 +125,10 @@ public class ControlConn extends AbstractConn {
                         info.remoteOSCode=cmd[4];
                         if(identity==CLIENT){
                             //send GET
-                            TransportConn transportConn=new TransportConn(host,TransportConn.RECEIVER,info,socket.getInetAddress().getHostAddress(),socket.getPort());
+                            TransportConn transportConn=new TransportConn(host,TransportConn.RECEIVER,info,socket.getInetAddress().getHostAddress(),socket.getPort(),this);
+                            synchronized(transportConn.controlConnToNotify){
+                                wait();
+                            }
                             // transportConn.writer.writeInt(BasicInfo.CONNTYPE_SERVER_SEND);
                             transportConn.getProxyThread().start();
                             writeMsg("get "+info.taskToken+" "+info.remotePath+" "+info.localPath+" "+BasicInfo.getOSName().replaceAll(" ", "?"));
@@ -140,8 +152,11 @@ public class ControlConn extends AbstractConn {
                         info.remotePath=cmd[3];
                         info.remoteOSCode=cmd[4];
                         if(identity==CLIENT){
-                            TransportConn transportConn=new TransportConn(host,TransportConn.SENDER,info,socket.getInetAddress().getHostAddress(),socket.getPort());
+                            TransportConn transportConn=new TransportConn(host,TransportConn.SENDER,info,socket.getInetAddress().getHostAddress(),socket.getPort(),this);
                             transportConn.getProxyThread().start();
+                            synchronized(transportConn.controlConnToNotify){
+                                wait();
+                            }
                             //send POST
                             writeMsg("post "+info.taskToken+" "+info.localPath+" "+info.remotePath+" "+BasicInfo.getOSName().replaceAll(" ", "?"));
                         }else if(identity==SERVER){
@@ -159,7 +174,14 @@ public class ControlConn extends AbstractConn {
                 }
             }
         }catch(Exception e){
+            Debugger.say(BasicInfo.getErrorInfo(e));
             host.controlConns.remove(this);
         }
+        try{
+            socket.close();
+        }catch(Exception e){
+
+        }
+        Debugger.say("conn reset:"+peerName);
     }
 }

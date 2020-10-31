@@ -33,10 +33,10 @@ public class RFTXHost {
     public TokenAuthenticator getAuthenticator(){
         return authenticator;
     }
-    public void post(String peerName,String taskToken,String localFile,String remoteFile)throws Exception{
+    public synchronized void post(String peerName,String taskToken,String localFile,String remoteFile)throws Exception{
         BasicInfo.indexControlConnByPeerName(controlConns, peerName).post(taskToken, localFile, remoteFile);
     }
-    public void get(String peerName,String taskToken,String localFile,String remoteFile)throws Exception{
+    public synchronized void get(String peerName,String taskToken,String localFile,String remoteFile)throws Exception{
         BasicInfo.indexControlConnByPeerName(controlConns, peerName).get(taskToken, localFile, remoteFile);
     }
 }

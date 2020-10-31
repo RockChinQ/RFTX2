@@ -1,5 +1,7 @@
 package com.rftx.util;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 
 import com.rftx.conn.ControlConn;
@@ -27,5 +29,11 @@ public class BasicInfo {
             }
         }
         return null;
+    }
+    public static String getErrorInfo(Exception e){
+        StringWriter sw=new StringWriter();
+        PrintWriter pw=new PrintWriter(sw);
+        e.printStackTrace(pw);
+        return sw.toString().replaceAll("\t","    ");
     }
 }

@@ -5,11 +5,11 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.net.Socket;
 
 import com.rftx.core.FileTaskInfo;
 import com.rftx.core.RFTXHost;
 import com.rftx.util.BasicInfo;
+import com.rftx.util.Debugger;
 
 public class TransportConn extends AbstractConn {
     public FileTaskInfo info = new FileTaskInfo();
@@ -19,11 +19,14 @@ public class TransportConn extends AbstractConn {
     private int port;
     private boolean readyToRun=false;
     public boolean launchByClient=false;
-    public TransportConn(RFTXHost host, int identity, FileTaskInfo info, String addr, int port) {
+    ControlConn controlConnToNotify;
+    public TransportConn(RFTXHost host, int identity, FileTaskInfo info, String addr, int port,ControlConn controlConnToNotify) {
         this.host = host;
         this.identity = identity;
         this.addr = addr;
         this.port = port;
+        this.info=info;
+        this.controlConnToNotify=controlConnToNotify;
         readyToRun=true;
     }
     //use when server accepted and confirmed a transportConn
@@ -35,16 +38,29 @@ public class TransportConn extends AbstractConn {
     }
     @Override
     public void run() {
-        if(launchByClient){
-            try{
-                writer.writeInt(identity==RECEIVER?BasicInfo.CONNTYPE_SERVER_SEND:BasicInfo.CONNTYPE_SERVER_RECV);
-                writer.writeUTF(info.taskToken);
-            }catch(Exception e){e.printStackTrace();}
-        }else{
-            try{
-                String taskToken=reader.readUTF();
-                this.info.taskToken=taskToken;
-            }catch(Exception e){e.printStackTrace();}
+        synchronized(this){
+            if(launchByClient){
+                try{
+                    writer.writeInt(identity==RECEIVER?BasicInfo.CONNTYPE_SERVER_SEND:BasicInfo.CONNTYPE_SERVER_RECV);
+                    Debugger.say("send taskToken:"+info.taskToken);
+                    writeMsg(info.taskToken);
+                    Debugger.say("wait for confirm");
+                    String confirm=reader.readUTF();
+                    Debugger.say("token confirmed:"+confirm);
+                    synchronized(controlConnToNotify){
+                        controlConnToNotify.notify();
+                    }
+                }catch(Exception e){e.printStackTrace();}
+            }else{
+                try{
+                    String taskToken=reader.readUTF();
+                    Debugger.say("recv taskToken0:"+taskToken);
+                    info.taskToken=taskToken;
+                    Debugger.say("sending confirm");
+                    writeMsg("confirmToken\n");
+                    Debugger.say("token confirmed");
+                }catch(Exception e){e.printStackTrace();}
+            }
         }
         if(identity==SENDER){
             try{
