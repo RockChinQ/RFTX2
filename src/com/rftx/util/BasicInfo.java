@@ -2,6 +2,7 @@ package com.rftx.util;
 
 import java.util.ArrayList;
 
+import com.rftx.conn.ControlConn;
 import com.rftx.conn.TransportConn;
 
 public class BasicInfo {
@@ -14,6 +15,15 @@ public class BasicInfo {
         for(var index=0;index<len;index++){
             if(arrayList.get(index).info.taskToken.equals(token)){
                 return arrayList.get(index);
+            }
+        }
+        return null;
+    }
+    public static ControlConn indexControlConnByPeerName(ArrayList<ControlConn> arrayList,String peerName){
+        int len=arrayList.size();
+        for(int i=0;i<len;i++){
+            if(arrayList.get(i).peerName.equals(peerName)){
+                return arrayList.get(i);
             }
         }
         return null;

@@ -35,7 +35,6 @@ public class TransportConn extends AbstractConn {
     }
     @Override
     public void run() {
-        //如果socket是null，则一定是由client发起连接
         if(launchByClient){
             try{
                 writer.writeInt(identity==RECEIVER?BasicInfo.CONNTYPE_SERVER_SEND:BasicInfo.CONNTYPE_SERVER_RECV);

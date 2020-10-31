@@ -3,7 +3,6 @@ package com.rftx.conn;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 
 import com.rftx.core.RFTXHost;
 

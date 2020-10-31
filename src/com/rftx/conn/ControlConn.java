@@ -14,7 +14,7 @@ import com.rftx.util.Debugger;
 public class ControlConn extends AbstractConn {
     boolean authed=false;
     String token="";
-    String peerName;
+    public String peerName;
     int identity=-1;
     public static final int CLIENT=0,SERVER=1;
     public ControlConn(RFTXHost host,int identity){
@@ -22,43 +22,47 @@ public class ControlConn extends AbstractConn {
         this.identity=identity;
     }
     public void post(String taskToken,String localFile,String remoteFile)throws Exception{
-        if(identity==CLIENT){
-            var info=new FileTaskInfo();
-            info.taskToken=taskToken;
-            info.localPath=localFile;
-            info.size=new File(localFile).length();
-            info.remotePath=remoteFile;
-            info.progress=0;
-            var transportConn=new TransportConn(host, TransportConn.SENDER,info,socket.getInetAddress().getHostAddress(),socket.getPort());
-            transportConn.launchByClient=true;
-            host.transportConns.add(transportConn);
-            //create conn for this
-            transportConn.socket=new Socket(this.socket.getInetAddress().getHostAddress(),this.socket.getPort());
-            transportConn.initRW();
+        synchronized(this){
+            if(identity==CLIENT){
+                var info=new FileTaskInfo();
+                info.taskToken=taskToken;
+                info.localPath=localFile;
+                info.size=new File(localFile).length();
+                info.remotePath=remoteFile;
+                info.progress=0;
+                var transportConn=new TransportConn(host, TransportConn.SENDER,info,socket.getInetAddress().getHostAddress(),socket.getPort());
+                transportConn.launchByClient=true;
+                host.transportConns.add(transportConn);
+                //create conn for this
+                transportConn.socket=new Socket(this.socket.getInetAddress().getHostAddress(),this.socket.getPort());
+                transportConn.initRW();
 
-            transportConn.getProxyThread().start();
-            writeMsg("post "+taskToken+" "+localFile+" "+remoteFile+" "+BasicInfo.getOSName().replaceAll(" ", "?"));
-        }else if(identity==SERVER){
-            writeMsg("post "+taskToken+" "+localFile+" "+remoteFile+" "+BasicInfo.getOSName().replaceAll(" ", "?"));
-        }
+                transportConn.getProxyThread().start();
+                writeMsg("post "+taskToken+" "+localFile+" "+remoteFile+" "+BasicInfo.getOSName().replaceAll(" ", "?"));
+            }else if(identity==SERVER){
+                writeMsg("post "+taskToken+" "+localFile+" "+remoteFile+" "+BasicInfo.getOSName().replaceAll(" ", "?"));
+            }
+        } 
     }
     public void get(String taskToken,String localFile,String remoteFile)throws Exception{
-        if(identity==CLIENT){
-            var info=new FileTaskInfo();
-            info.taskToken=taskToken;
-            info.localPath=localFile;
-            info.remotePath=remoteFile;
-            info.progress=0;
-            var transportConn=new TransportConn(host, TransportConn.RECEIVER,info,socket.getInetAddress().getHostAddress(),socket.getPort());
-            transportConn.launchByClient=true;
-            host.transportConns.add(transportConn);
-            //create conn for this
-            transportConn.socket=new Socket(this.socket.getInetAddress().getHostAddress(),this.socket.getPort());
-            transportConn.initRW();
-            transportConn.getProxyThread().start();
-            writeMsg("get "+taskToken+" "+localFile+" "+remoteFile+" "+BasicInfo.getOSName().replaceAll(" ", "?"));
-        }else if(identity==SERVER){
-            writeMsg("get "+taskToken+" "+localFile+" "+remoteFile+" "+BasicInfo.getOSName().replaceAll(" ", "?"));
+        synchronized(this){
+            if(identity==CLIENT){
+                var info=new FileTaskInfo();
+                info.taskToken=taskToken;
+                info.localPath=localFile;
+                info.remotePath=remoteFile;
+                info.progress=0;
+                var transportConn=new TransportConn(host, TransportConn.RECEIVER,info,socket.getInetAddress().getHostAddress(),socket.getPort());
+                transportConn.launchByClient=true;
+                host.transportConns.add(transportConn);
+                //create conn for this
+                transportConn.socket=new Socket(this.socket.getInetAddress().getHostAddress(),this.socket.getPort());
+                transportConn.initRW();
+                transportConn.getProxyThread().start();
+                writeMsg("get "+taskToken+" "+localFile+" "+remoteFile+" "+BasicInfo.getOSName().replaceAll(" ", "?"));
+            }else if(identity==SERVER){
+                writeMsg("get "+taskToken+" "+localFile+" "+remoteFile+" "+BasicInfo.getOSName().replaceAll(" ", "?"));
+            }
         }
     }
     @Override
@@ -66,12 +70,14 @@ public class ControlConn extends AbstractConn {
         Debugger.say("control conn start:"+(identity==SERVER?"SERVER":"CLIENT"));
         byte[] buffer=new byte[1024];
         try{
-            if(identity==CLIENT){
-                writer.writeInt(BasicInfo.CONNTYPE_CONTROL);
-                host.getAuthenticator().send(this);
+            synchronized(this){
+                if(identity==CLIENT){
+                    writer.writeInt(BasicInfo.CONNTYPE_CONTROL);
+                    host.getAuthenticator().send(this);
+                }
+                Debugger.say("send name:"+host.hostName);
+                writeMsg("name "+host.hostName);
             }
-            Debugger.say("send name:"+host.hostName);
-            writeMsg("name "+host.hostName);
             String msg;
             while((msg=getReader().readUTF())!=null){
                 String[] cmd=msg.split(" ");

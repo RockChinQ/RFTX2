@@ -5,6 +5,7 @@ import com.rftx.auth.TokenAuthenticator;
 import com.rftx.conn.ControlConn;
 import com.rftx.conn.DefaultConn;
 import com.rftx.conn.TransportConn;
+import com.rftx.util.BasicInfo;
 
 public class RFTXHost {
     public ArrayList<DefaultConn> defaultConns=new ArrayList<>();
@@ -31,5 +32,11 @@ public class RFTXHost {
     }
     public TokenAuthenticator getAuthenticator(){
         return authenticator;
+    }
+    public void post(String peerName,String taskToken,String localFile,String remoteFile)throws Exception{
+        BasicInfo.indexControlConnByPeerName(controlConns, peerName).post(taskToken, localFile, remoteFile);
+    }
+    public void get(String peerName,String taskToken,String localFile,String remoteFile)throws Exception{
+        BasicInfo.indexControlConnByPeerName(controlConns, peerName).get(taskToken, localFile, remoteFile);
     }
 }

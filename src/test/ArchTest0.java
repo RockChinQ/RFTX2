@@ -13,5 +13,8 @@ public class ArchTest0 {
         host.server.start();
         host1.initClient();
         host1.client.connect("localhost", 3000,"testClientToken");
+        //send file
+        Thread.sleep(2000);
+        host.post("TestClient", "testFile", "transportTest.txt", "TransportTest2.txt");
     }
 }

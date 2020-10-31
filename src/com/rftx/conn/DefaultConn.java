@@ -5,6 +5,7 @@ import java.net.Socket;
 import com.rftx.core.RFTXHost;
 import com.rftx.exception.PeerIdentityException;
 import com.rftx.util.BasicInfo;
+import com.rftx.util.Debugger;
 
 public class DefaultConn extends AbstractConn{
     public DefaultConn(RFTXHost host,Socket socket)throws Exception{
@@ -17,6 +18,7 @@ public class DefaultConn extends AbstractConn{
         try{
             //read type
             int type=reader.readInt();
+            Debugger.say("DefaultConn readType:"+type);
             switch(type){
                 case BasicInfo.CONNTYPE_CONTROL:{
                     ControlConn controlConn=new ControlConn(host, ControlConn.SERVER);
