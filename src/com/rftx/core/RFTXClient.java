@@ -9,6 +9,9 @@ public class RFTXClient {
     RFTXClient(RFTXHost host){
         this.host=host;
     }
+    public void setAuthToken(String token){
+        host.authenticator.clientToken=token;
+    }
     /**
      * connect a RFTX server
      */

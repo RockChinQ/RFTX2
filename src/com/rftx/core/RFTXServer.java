@@ -20,7 +20,12 @@ public class RFTXServer implements Runnable{
         //server accepting conn thread can be stopped anytime.
         proxyThr.stop();
     }
-
+    public void addValidToken(String name,String token){
+        host.authenticator.getAuthTokenMap().put(name, token);
+    }
+    public String removeToken(String name){
+        return host.authenticator.getAuthTokenMap().remove(name);
+    }
     //related to accepting conn
     ServerSocket serverSocket;
 
