@@ -126,7 +126,11 @@ public class ControlConn extends AbstractConn {
                         if(identity==CLIENT){
                             //send GET
                             TransportConn transportConn=new TransportConn(host,TransportConn.RECEIVER,info,socket.getInetAddress().getHostAddress(),socket.getPort(),this);
-                            
+                            transportConn.launchByClient=true;
+                            host.transportConns.add(transportConn);
+                            //create conn for this
+                            transportConn.socket=new Socket(this.socket.getInetAddress().getHostAddress(),this.socket.getPort());
+                            transportConn.initRW();
                             // transportConn.writer.writeInt(BasicInfo.CONNTYPE_SERVER_SEND);
                             transportConn.getProxyThread().start();
                             synchronized(this){
@@ -155,6 +159,11 @@ public class ControlConn extends AbstractConn {
                         info.remoteOSCode=cmd[4];
                         if(identity==CLIENT){
                             TransportConn transportConn=new TransportConn(host,TransportConn.SENDER,info,socket.getInetAddress().getHostAddress(),socket.getPort(),this);
+                            transportConn.launchByClient=true;
+                            host.transportConns.add(transportConn);
+                            //create conn for this
+                            transportConn.socket=new Socket(this.socket.getInetAddress().getHostAddress(),this.socket.getPort());
+                            transportConn.initRW();
                             transportConn.getProxyThread().start();
                             synchronized(this){
                                 this.wait();

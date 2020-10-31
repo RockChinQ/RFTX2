@@ -9,9 +9,8 @@ public class ClientOnly {
         Debugger.debug=true;
         clientHost.initClient();
         clientHost.client.connect("192.168.1.4", 3000, "auth");
-        Thread.sleep(2000);
-        clientHost.get("server","task0","getFile.txt", "transportTest.txt");
-        clientHost.post("server","task1","getFile.txt", "transportTest0.txt");
+        // clientHost.get("server","task0","getFile.txt", "transportTest.txt");
+        // clientHost.post("server","task1","getFile.txt", "transportTest0.txt");
     }
     
 }
