@@ -126,11 +126,13 @@ public class ControlConn extends AbstractConn {
                         if(identity==CLIENT){
                             //send GET
                             TransportConn transportConn=new TransportConn(host,TransportConn.RECEIVER,info,socket.getInetAddress().getHostAddress(),socket.getPort(),this);
-                            synchronized(transportConn.controlConnToNotify){
-                                wait();
-                            }
+                            
                             // transportConn.writer.writeInt(BasicInfo.CONNTYPE_SERVER_SEND);
                             transportConn.getProxyThread().start();
+                            synchronized(this){
+                                this.wait();
+                            }
+                            Debugger.say("SEND get msg");
                             writeMsg("get "+info.taskToken+" "+info.remotePath+" "+info.localPath+" "+BasicInfo.getOSName().replaceAll(" ", "?"));
                         }else if(identity==SERVER){
                             //index TransportConn and set file info
@@ -154,10 +156,11 @@ public class ControlConn extends AbstractConn {
                         if(identity==CLIENT){
                             TransportConn transportConn=new TransportConn(host,TransportConn.SENDER,info,socket.getInetAddress().getHostAddress(),socket.getPort(),this);
                             transportConn.getProxyThread().start();
-                            synchronized(transportConn.controlConnToNotify){
-                                wait();
+                            synchronized(this){
+                                this.wait();
                             }
                             //send POST
+                            Debugger.say("SEND post msg");
                             writeMsg("post "+info.taskToken+" "+info.localPath+" "+info.remotePath+" "+BasicInfo.getOSName().replaceAll(" ", "?"));
                         }else if(identity==SERVER){
                             //server is a sender here!!!!!
