@@ -5,6 +5,7 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.util.Date;
 
 import com.rftx.core.FileTaskInfo;
 import com.rftx.core.RFTXHost;
@@ -19,6 +20,7 @@ public class TransportConn extends AbstractConn {
     private boolean readyToRun=false;
     public boolean launchByClient=false;
     ControlConn controlConnToNotify;
+    private long launchTime=new Date().getTime();
     public TransportConn(RFTXHost host, int identity, FileTaskInfo info,ControlConn controlConnToNotify) {
         this.host = host;
         this.identity = identity;
@@ -26,12 +28,23 @@ public class TransportConn extends AbstractConn {
         this.controlConnToNotify=controlConnToNotify;
         readyToRun=true;
     }
+    public FileTaskInfo getTaskInfo(){
+        info.localHostIdentity=identity;
+        info.remoteAddr=socket.getInetAddress().getHostAddress();
+        info.remotePort=socket.getPort();
+        info.launchTime=this.launchTime;
+        return info;
+    }
     //use when server accepted and confirmed a transportConn
     //set info to UNREADY will make thread to wait
     public TransportConn(RFTXHost host, int identity) {
         this.host = host;
         this.identity = identity;
         readyToRun=false;
+    }
+    public void stop(){
+        host.interrupt(getTaskInfo());
+        this.getProxyThread().stop();
     }
     @Override
     public void run() {
@@ -74,6 +87,7 @@ public class TransportConn extends AbstractConn {
                     if(!readyToRun)
                         wait();
                 }
+                host.start(getTaskInfo());
                 writer.writeLong(new File(info.localPath).length());
                 //打开localfile的输入流,向socket发送
                 DataInputStream fileIn;
@@ -98,6 +112,7 @@ public class TransportConn extends AbstractConn {
                 }
                 Debugger.say("close file");
                 host.transportConns.remove(this);
+                host.finish(getTaskInfo());
                 fileIn.close();
                 writer.close();
             }catch(Exception e){
@@ -116,6 +131,7 @@ public class TransportConn extends AbstractConn {
                     if(!readyToRun)
                         wait();
                 }
+                host.start(getTaskInfo());
                 info.size=reader.readLong();
                 //confirm before create file to avoid empty file
                 String fileConfim=reader.readUTF();
@@ -155,6 +171,7 @@ public class TransportConn extends AbstractConn {
                 }
                 Debugger.say("close file");
                 host.transportConns.remove(this);
+                host.finish(getTaskInfo());
                 //close
                 fileOut.close();
                 this.reader.close();

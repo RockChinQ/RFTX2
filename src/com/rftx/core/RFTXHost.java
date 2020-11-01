@@ -6,13 +6,39 @@ import com.rftx.auth.TokenAuthenticator;
 import com.rftx.conn.ControlConn;
 import com.rftx.conn.DefaultConn;
 import com.rftx.conn.TransportConn;
+import com.rftx.listener.TaskListener;
 import com.rftx.util.BasicInfo;
 
-public class RFTXHost {
+public class RFTXHost implements TaskListener{
     public ArrayList<DefaultConn> defaultConns=new ArrayList<>();
     public ArrayList<ControlConn> controlConns=new ArrayList<>();
     public ArrayList<TransportConn> transportConns=new ArrayList<>();
-
+    public ArrayList<FileTaskInfo> getAllTaskInfo(){
+        ArrayList<FileTaskInfo> result=new ArrayList<>();
+        for(TransportConn transportConn:transportConns){
+            result.add(transportConn.getTaskInfo());
+        }
+        return result;
+    }
+    public FileTaskInfo getTaskInfo(String token){
+        for(TransportConn transportConn:transportConns){
+            if(transportConn.info.taskToken.equals(token)){
+                return transportConn.getTaskInfo();
+            }
+        }
+        return null;
+    }
+    public ArrayList<TransportConn> getAllTransportConn(){
+        return this.transportConns;
+    }
+    public TransportConn getTransportConn(String token){
+        for(TransportConn transportConn:transportConns){
+            if(transportConn.info.taskToken.equals(token)){
+                return transportConn;
+            }
+        }
+        return null;
+    }
     //basic info 
     public String hostName="";
     //Client and server
@@ -22,6 +48,8 @@ public class RFTXHost {
     TokenAuthenticator authenticator=new TokenAuthenticator();
     //exception
     ExceptionListener exceptionListener;
+    //listener
+    TaskListener taskListener;
     public RFTXHost(String hostName){
         this.hostName=hostName;
     }
@@ -51,6 +79,33 @@ public class RFTXHost {
     public void throwException(Exception e){
         if(getExceptionListener()!=null){
             getExceptionListener().exceptionThrown(e);
+        }
+    }
+    public TaskListener getTaskListener(){
+        return this.taskListener;
+    }
+
+    @Override
+    public void start(FileTaskInfo info) {
+        // TODO Auto-generated method stub
+        if(this.taskListener!=null){
+            taskListener.start(info);
+        }
+    }
+
+    @Override
+    public void finish(FileTaskInfo info) {
+        // TODO Auto-generated method stub
+        if(this.taskListener!=null){
+            taskListener.finish(info);
+        }
+    }
+
+    @Override
+    public void interrupt(FileTaskInfo info) {
+        // TODO Auto-generated method stub
+        if(this.taskListener!=null){
+            taskListener.interrupt(info);
         }
     }
 }

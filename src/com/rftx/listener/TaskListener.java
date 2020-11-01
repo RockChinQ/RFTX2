@@ -1,5 +1,9 @@
 package com.rftx.listener;
 
-public class TaskListener {
-    
+import com.rftx.core.FileTaskInfo;
+
+public interface TaskListener {
+    void start(FileTaskInfo info);
+    void finish(FileTaskInfo info);
+    void interrupt(FileTaskInfo info);
 }
