@@ -16,8 +16,9 @@ public class RFTXServer implements Runnable{
     public void start(){
         proxyThr.start();
     }
-    public void stop(){
+    public void stop()throws Exception{
         //server accepting conn thread can be stopped anytime.
+        serverSocket.close();
         proxyThr.stop();
     }
     public void addValidToken(String name,String token){
