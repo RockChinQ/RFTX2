@@ -7,13 +7,16 @@ import com.rftx.conn.DefaultConn;
 import com.rftx.util.Debugger;
 
 public class RFTXServer implements Runnable{
+    static int count=0;
     RFTXHost host;
-    private Thread proxyThr=new Thread(this);
+    private Thread proxyThr;
     RFTXServer(RFTXHost host,int port)throws Exception{
         this.host=host;
         serverSocket=new ServerSocket(port);
     }
     public void start(){
+        proxyThr=new Thread(this);
+        proxyThr.setName("RFTXServer-"+(count++));
         proxyThr.start();
     }
     public void stop()throws Exception{
@@ -40,7 +43,7 @@ public class RFTXServer implements Runnable{
                 host.defaultConns.add(defaultConn);
                 defaultConn.getProxyThread().start();
             }catch(Exception e){
-                e.printStackTrace();
+                // e.printStackTrace();
             }
         }
     }
