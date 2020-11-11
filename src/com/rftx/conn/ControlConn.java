@@ -76,6 +76,11 @@ public class ControlConn extends AbstractConn {
     @Override
     public void run() {
         Debugger.say("control conn start:"+(identity==SERVER?"SERVER":"CLIENT"));
+        if(identity==SERVER){
+            host.server.connected(this);
+        }else if(identity==CLIENT){
+            host.client.connected(this);
+        }
         try{
             synchronized(this){
                 if(identity==CLIENT){
@@ -106,6 +111,7 @@ public class ControlConn extends AbstractConn {
                                 throw new AuthenticateException("invalid auth token:"+cmd[1]+" from:"+socket.getInetAddress());
                             }else{
                                 writeMsg("authSuc");
+                                host.server.authenticated(this);
                             }
                         }else if(identity==CLIENT){
                             throw new PeerIdentityException("illegal auth msg from server");
@@ -114,9 +120,10 @@ public class ControlConn extends AbstractConn {
                     }
                     //client specific
                     case "authSuc":{
-                        if(identity==CLIENT)
+                        if(identity==CLIENT){
                             authed=true;
-                        else if(identity==SERVER)
+                            host.client.authenticated(this);
+                        }else if(identity==SERVER)
                             throw new PeerIdentityException("illegal authSuc msg from a client:client ip:"+socket.getInetAddress());
                         break;
                     }
@@ -218,6 +225,11 @@ public class ControlConn extends AbstractConn {
             socket.close();
         }catch(Exception e){
 
+        }
+        if(identity==SERVER){
+            host.server.disconnected(this);
+        }else if(identity==CLIENT){
+            host.client.disconnected(this);
         }
         Debugger.say("conn reset:"+peerName);
     }
