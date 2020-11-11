@@ -3,8 +3,10 @@ package com.rftx.core;
 import java.net.Socket;
 
 import com.rftx.conn.ControlConn;
+import com.rftx.listener.ClientConnListener;
 
-public class RFTXClient {
+
+public class RFTXClient implements ClientConnListener{
     private RFTXHost host;
     RFTXClient(RFTXHost host){
         this.host=host;
@@ -23,5 +25,36 @@ public class RFTXClient {
         conn.initRW();
         host.controlConns.add(conn);
         conn.getProxyThread().start();
+    }
+    ClientConnListener connListener;
+    public void setClientConnListener(ClientConnListener listener){
+        this.connListener=listener;
+    }
+    public ClientConnListener getClientConnListener(){
+        return this.connListener;
+    }
+    @Override
+    public void connected(ControlConn conn) {
+        // TODO Auto-generated method stub
+        if(this.connListener!=null){
+            connListener.connected(conn);
+        }
+
+    }
+
+    @Override
+    public void authenticated(ControlConn conn) {
+        // TODO Auto-generated method stub
+        if(this.connListener!=null){
+            connListener.authenticated(conn);
+        }
+    }
+
+    @Override
+    public void disconnected(ControlConn conn) {
+        // TODO Auto-generated method stub
+        if(this.connListener!=null){
+            connListener.disconnected(conn);
+        }
     }
 }
