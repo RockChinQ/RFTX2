@@ -84,6 +84,26 @@ public class RFTXHost implements TaskListener{
     public TaskListener getTaskListener(){
         return this.taskListener;
     }
+    /**
+     * kill all controlConns and transportConns and stop all task release all resources;
+     */
+    public void exit()throws Exception{
+        for(ControlConn conn:this.controlConns){
+            conn.getSocket().close();
+        }
+        controlConns.clear();
+        for(TransportConn conn : this.transportConns) {
+            conn.getSocket().close();
+        }
+        transportConns.clear();
+        for(DefaultConn conn : this.defaultConns) {
+            conn.getSocket().close();
+        }
+        defaultConns.clear();
+        if(server!=null){
+            server.stop();
+        }
+    }
 
     @Override
     public void start(FileTaskInfo info) {
