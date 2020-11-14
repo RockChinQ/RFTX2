@@ -70,7 +70,7 @@ host.server.start();//Call this method to start the listener thread for RFTXServ
 - Any number of legal tokens can be added. When the client connects, the connection token of the client will be sent for authentication
 - The underlying program uses HashMap to store valid token, which means that only one valid token with the same name can exist at the same time
 
-#### 客户端
+#### Client
 
 Assume that a `host:RFTXHost` Object is defined (and this is necessary)
 
