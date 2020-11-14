@@ -1,5 +1,7 @@
 # RFTX2 lib
 
+[README](README.md) | [中文文档](README_cn.md)
+
 ## 项目结构
 
 - `src` 源代码
@@ -23,7 +25,7 @@ jdk11环境下vscode中使用Java Extension
 
 ### 被调用类
 
-- `com.rftx.core.RFTXHost` 定义了一个RFTX主机,无论调用者是服务端、客户端或者同时作为服务端和客户端,RFTXHost对象都是必须的;RFTXHost保存了由`RFTXServer`接受和`RFTXClient`创建 的所有`控制连接`和`传输连接`
+- `com.rftx.core.RFTXHost` 定义了一个RFTX主机,无论调用者是服务端、客户端或者同时作为服务端和客户端,RFTXHost对象都是必须的;RFTXHost保存了由`RFTXServer`接受或`RFTXClient`创建 的所有`控制连接`和`传输连接`
 - `com.rftx.core.RFTXServer` 定义了一个RFTX服务端程序,此对象被包含在RFTXHost对象中,由指定方法创建;RFTXServer是一个线程,启动后以堵塞的方式接受连接,并将连接储存到RFTXHost的连接链表中
 - `com.rftx.core.RFTXClient` 定义了一个RFTX客户端程序,此对象被包含在RFTXHost中,由指定方法创建;RFTXClient包含一个`connect(String addr,int port)`方法,用于连接指定地址的指定端口上被启动的RFTXServer程序
 
@@ -54,7 +56,7 @@ RFTXHost host=new RFTXHost("hostName");//创建一个hostname命名的RFTXHost
 - 必须先调用init方法才能使用server或者client对象,否则会抛出`NullPointerException`
 - 一个`RFTXHost`对象中可以只创建`RFTXServer`或只创建`RFTXClient`对象亦或是同时创建两个对象
 
-### 1.建立连接
+### 1.建立控制连接
 
 #### 服务端
 
