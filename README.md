@@ -13,4 +13,4 @@ The workspace contains two folders by default, where:
 
 ## Environment
 
-vscode with Java Extensions Pack and JDK11.
+vscode with Java Extensions Pack and JDK11
