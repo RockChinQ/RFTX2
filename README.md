@@ -21,6 +21,6 @@ vscode with Java Extensions Pack and JDK11
 - `com.rftx.conn` 工作过程中的控制连接、传输连接线程
 - `com.rftx.core` RFTX工作中的服务端和客户端
 - `com.rftx.exception` 异常类
-- `com.rftx.listener` 工作时的事件监听器接口，由上层实现
+- `com.rftx.listener` 工作时的事件监听器接口,由上层实现
 - `com.rftx.util` 工具类
 - `com.rftx.test` 测试类
