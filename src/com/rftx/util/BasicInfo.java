@@ -12,10 +12,10 @@ public class BasicInfo {
     public static String getOSName(){
         return System.getProperty("os.name");
     }
-    public static TransportConn indexTransportConnByTaskToken(ArrayList<TransportConn> arrayList,String token){
+    public static TransportConn indexTransportConnByTaskToken(ArrayList<TransportConn> arrayList,String token,int identity){
         int len=arrayList.size();
         for(var index=0;index<len;index++){
-            if(arrayList.get(index).info.taskToken.equals(token)){
+            if(arrayList.get(index).info.taskToken.equals(token)&&arrayList.get(index).identity==identity){
                 return arrayList.get(index);
             }
         }

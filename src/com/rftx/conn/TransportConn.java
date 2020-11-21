@@ -15,7 +15,7 @@ import com.rftx.util.Debugger;
 public class TransportConn extends AbstractConn {
     public static int transBufferSize=65536;
     public FileTaskInfo info = new FileTaskInfo();
-    int identity = -1;
+    public int identity = -1;
     public static final int SENDER = 0, RECEIVER = 1;
     private boolean readyToRun=false;
     public boolean launchByClient=false;
@@ -80,18 +80,20 @@ public class TransportConn extends AbstractConn {
                 }
             }
         }
-        this.getProxyThread().setName(info.taskToken);
+        this.getProxyThread().setName("tc-"+info.taskToken+(identity==RECEIVER?"-RECV":"-SEND"));
         if(identity==SENDER){
             try{
                 synchronized(this){
                     if(!readyToRun)
                         wait();
                 }
+                Debugger.say("sender started.");
                 host.start(getTaskInfo());
                 writer.writeLong(new File(info.localPath).length());
                 //打开localfile的输入流,向socket发送
                 DataInputStream fileIn;
                 try{
+                    (new File(info.localPath.replaceAll("\\?", " "))).createNewFile();
                     fileIn=new DataInputStream(new FileInputStream(new File(info.localPath.replaceAll("\\?", " "))));
                 }catch(Exception e){
                     writeMsg("err");
@@ -131,6 +133,7 @@ public class TransportConn extends AbstractConn {
                     if(!readyToRun)
                         wait();
                 }
+                Debugger.say("recver started.");
                 host.start(getTaskInfo());
                 info.size=reader.readLong();
                 //confirm before create file to avoid empty file

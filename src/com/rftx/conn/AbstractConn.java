@@ -7,6 +7,8 @@ import java.net.Socket;
 import com.rftx.core.RFTXHost;
 
 public abstract class AbstractConn implements Runnable{
+    public static long CID_INDEX=0;
+    public long cid=++CID_INDEX;
     Socket socket;
     DataInputStream reader;
     DataOutputStream writer;
@@ -32,6 +34,13 @@ public abstract class AbstractConn implements Runnable{
     public void initRW()throws Exception{
         this.reader=new DataInputStream(socket.getInputStream());
         this.writer=new DataOutputStream(socket.getOutputStream());
+    }
+    /**
+     * close socket and stop thread.
+     */
+    public void dispose() throws Exception{
+        this.proxyThr.stop();
+        this.socket.close();
     }
     public void writeMsg(String msg)throws Exception{
         getWriter().writeUTF(msg);

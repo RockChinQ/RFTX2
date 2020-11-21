@@ -13,9 +13,9 @@ import com.rftx.util.Debugger;
 
 public class ControlConn extends AbstractConn {
     boolean authed=false;
-    String token="";
+    public String token="";
     public String peerName="";
-    int identity=-1;
+    public int identity=-1;
     public static final int CLIENT=0,SERVER=1;
     public ControlConn(RFTXHost host,int identity){
         this.host=host;
@@ -41,7 +41,7 @@ public class ControlConn extends AbstractConn {
                 synchronized(this){
                     this.wait();
                 }
-                Debugger.say("SEND post msg");
+                Debugger.say("Clinet SEND post msg at actively call");
                 writeMsg("post "+taskToken+" "+localFile.replaceAll(" ", "?")+" "+remoteFile.replaceAll(" ", "?")+" "+BasicInfo.getOSName().replaceAll(" ", "?"));
             }else if(identity==SERVER){
                 writeMsg("post "+taskToken+" "+localFile.replaceAll(" ", "?")+" "+remoteFile.replaceAll(" ", "?")+" "+BasicInfo.getOSName().replaceAll(" ", "?"));
@@ -66,7 +66,7 @@ public class ControlConn extends AbstractConn {
                 synchronized(this){
                     this.wait();
                 }
-                Debugger.say("SEND get msg");
+                Debugger.say("Client SEND get msg at actively call");
                 writeMsg("get "+taskToken+" "+remoteFile.replaceAll(" ", "?")+" "+localFile.replaceAll(" ", "?")+" "+BasicInfo.getOSName().replaceAll(" ", "?"));
             }else if(identity==SERVER){
                 writeMsg("get "+taskToken+" "+remoteFile.replaceAll(" ", "?")+" "+localFile.replaceAll(" ", "?")+" "+BasicInfo.getOSName().replaceAll(" ", "?"));
@@ -81,6 +81,7 @@ public class ControlConn extends AbstractConn {
         }else if(identity==CLIENT){
             host.client.connected(this);
         }
+        this.getProxyThread().setName("cc-"+(identity==SERVER?"SERVER":"CLIENT"));
         try{
             synchronized(this){
                 if(identity==CLIENT){
@@ -165,12 +166,13 @@ public class ControlConn extends AbstractConn {
                             //index TransportConn and set file info
                             //server is a recveiver here!!!!
                             synchronized(host.transportConns){
-                                var transportConn=BasicInfo.indexTransportConnByTaskToken(host.transportConns, info.taskToken);
+                                var transportConn=BasicInfo.indexTransportConnByTaskToken(host.transportConns, info.taskToken,TransportConn.RECEIVER);
                                 transportConn.info=info;
                                 transportConn.controlConnToNotify=this;
                                 synchronized(transportConn){
                                     transportConn.notify();
                                 }
+                                Debugger.say("Server start to recv");
                             }
                         }
                         break;
@@ -201,7 +203,7 @@ public class ControlConn extends AbstractConn {
                         }else if(identity==SERVER){
                             //server is a sender here!!!!!
                             synchronized(host.transportConns){
-                                var transportConn=BasicInfo.indexTransportConnByTaskToken(host.transportConns, info.taskToken);
+                                var transportConn=BasicInfo.indexTransportConnByTaskToken(host.transportConns, info.taskToken,TransportConn.SENDER);
                                 transportConn.info=info;
                                 transportConn.controlConnToNotify=this;
                                 synchronized(transportConn){

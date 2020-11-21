@@ -89,15 +89,15 @@ public class RFTXHost implements TaskListener{
      */
     public void exit()throws Exception{
         for(ControlConn conn:this.controlConns){
-            conn.getSocket().close();
+            conn.dispose();
         }
         controlConns.clear();
         for(TransportConn conn : this.transportConns) {
-            conn.getSocket().close();
+            conn.dispose();
         }
         transportConns.clear();
         for(DefaultConn conn : this.defaultConns) {
-            conn.getSocket().close();
+            conn.dispose();
         }
         defaultConns.clear();
         if(server!=null){
