@@ -90,17 +90,18 @@ public class TransportConn extends AbstractConn {
                 Debugger.say("sender started.");
                 host.start(getTaskInfo());
                 writer.writeLong(new File(info.localPath).length());
+                Debugger.say("wrote size");
                 //打开localfile的输入流,向socket发送
                 DataInputStream fileIn;
                 try{
                     (new File(info.localPath.replaceAll("\\?", " "))).createNewFile();
                     fileIn=new DataInputStream(new FileInputStream(new File(info.localPath.replaceAll("\\?", " "))));
                 }catch(Exception e){
-                    writeMsg("err");
+                    getWriter().writeUTF("err");
                     throw e;
                 }
                 //成功打开则发送成功的确认消息
-                writeMsg("sucIn");
+                getWriter().writeUTF("sucIn");
                 String fileConfim=reader.readUTF();
                 if(fileConfim.equals("err")){
                     host.transportConns.remove(this);
@@ -111,6 +112,7 @@ public class TransportConn extends AbstractConn {
                 while((len=fileIn.read(buffer, 0, transBufferSize))!=-1){
                     writer.write(buffer, 0, len);
                     info.progress+=len;
+                    // Debugger.say("send:"+info.progress);
                 }
                 Debugger.say("close file");
                 host.transportConns.remove(this);
@@ -136,6 +138,7 @@ public class TransportConn extends AbstractConn {
                 Debugger.say("recver started.");
                 host.start(getTaskInfo());
                 info.size=reader.readLong();
+                Debugger.say("read size."+info.size);
                 //confirm before create file to avoid empty file
                 String fileConfim=reader.readUTF();
                 if(fileConfim.equals("err")){
@@ -160,17 +163,18 @@ public class TransportConn extends AbstractConn {
                     //open file
                     fileOut=new DataOutputStream(new FileOutputStream(outf));
                 }catch(Exception e){
-                    writeMsg("err");
+                    getWriter().writeUTF("err");
                     throw e;
                 }
                 //成功打开
-                writeMsg("sucOut");
+                getWriter().writeUTF("sucOut");
                 //loop read and write
                 byte[] buffer=new byte[transBufferSize];
                 int len=0;
                 while((len=reader.read(buffer, 0, transBufferSize))!=-1){
                     fileOut.write(buffer, 0, len);
                     info.progress+=len;
+                    // Debugger.say("recv:"+info.progress);
                 }
                 Debugger.say("close file");
                 host.transportConns.remove(this);
