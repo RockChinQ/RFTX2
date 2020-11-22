@@ -2,6 +2,7 @@ package com.rftx.conn;
 
 import java.io.File;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 
 import com.rftx.core.FileTaskInfo;
 import com.rftx.core.RFTXHost;
@@ -89,16 +90,23 @@ public class ControlConn extends AbstractConn {
                     host.getAuthenticator().send(this);
                 }
                 Debugger.say("send name:"+host.hostName);
-                writeMsg("name "+host.hostName);
+                if(identity==SERVER)
+                    writeMsg("name "+host.hostName);
             }
-            String msg;
-            while((msg=getReader().readUTF())!=null){
-                String[] cmd=msg.split(" ");
-                Debugger.say((identity==SERVER?"SERVER":"CLIENT")+" read msg:"+msg);
+            // String msg;
+            byte[] msg=new byte[2048];
+            int len=0;
+            while((len=getReader().read(msg)) != -1) {
+                String strmsg=new String(msg, StandardCharsets.UTF_8);
+                String[] cmd=strmsg.replaceAll(String.valueOf('\u0000'),"").split(" ");
+                Debugger.say((identity==SERVER?"SERVER":"CLIENT")+" read msg:"+strmsg);
                 switch(cmd[0]){
                     case "name":{
                         peerName=cmd[1];
-                        Debugger.say("new name:"+peerName);
+                        Debugger.say((identity==SERVER?"SERVER":"CLIENT")+" peer's new name:"+peerName);
+                        if(identity==CLIENT){
+                            writeMsg("name "+host.hostName);
+                        }
                         break;
                     }
                     //server specific
@@ -214,10 +222,11 @@ public class ControlConn extends AbstractConn {
                         break;
                     }
                     case "err":{
-                        host.throwException(new PeerProcessException(msg.substring(4)));
+                        host.throwException(new PeerProcessException(strmsg.substring(4)));
                         break;
                     }
                 }
+                msg=new byte[2048];
             }
         }catch(Exception e){
             host.throwException(e);

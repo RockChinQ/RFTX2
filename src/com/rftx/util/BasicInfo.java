@@ -22,9 +22,12 @@ public class BasicInfo {
         return null;
     }
     public static ControlConn indexControlConnByPeerName(ArrayList<ControlConn> arrayList,String peerName){
+        Debugger.say("Index control:"+peerName+" in "+arrayList.size());
         int len=arrayList.size();
         for(int i=0;i<len;i++){
+            Debugger.say("is cconn:"+arrayList.get(i).peerName+"?");
             if(arrayList.get(i).peerName.equals(peerName)){
+                Debugger.say("get cconn:"+arrayList.get(i).peerName+" identity:"+(arrayList.get(i).identity==0?"CLINET":"SERVER"));
                 return arrayList.get(i);
             }
         }

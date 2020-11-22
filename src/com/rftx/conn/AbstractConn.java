@@ -3,8 +3,10 @@ package com.rftx.conn;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 
 import com.rftx.core.RFTXHost;
+import com.rftx.util.Debugger;
 
 public abstract class AbstractConn implements Runnable{
     public static long CID_INDEX=0;
@@ -43,7 +45,9 @@ public abstract class AbstractConn implements Runnable{
         this.socket.close();
     }
     public void writeMsg(String msg)throws Exception{
-        getWriter().writeUTF(msg);
+        Debugger.say("write:"+msg);
+        getWriter().write(msg.getBytes(StandardCharsets.UTF_8));
+        // getWriter().writeUTF(msg);
         getWriter().flush();
     }
     public void writeMsgIgnoreException(String msg){

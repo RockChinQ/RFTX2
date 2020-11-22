@@ -53,7 +53,7 @@ public class TransportConn extends AbstractConn {
                 try{
                     writer.writeInt(identity==RECEIVER?BasicInfo.CONNTYPE_SERVER_SEND:BasicInfo.CONNTYPE_SERVER_RECV);
                     Debugger.say("send taskToken:"+info.taskToken);
-                    writeMsg(info.taskToken);
+                    getWriter().writeUTF(info.taskToken);
                     Debugger.say("wait for confirm");
                     String confirm=reader.readUTF();
                     Debugger.say("token confirmed:"+confirm);
@@ -71,7 +71,7 @@ public class TransportConn extends AbstractConn {
                     Debugger.say("recv taskToken0:"+taskToken);
                     info.taskToken=taskToken;
                     Debugger.say("sending confirm");
-                    writeMsg("confirmToken\n");
+                    getWriter().writeUTF("confirmToken\n");
                     Debugger.say("token confirmed");
                 }catch(Exception e){
                     host.throwException(e);
