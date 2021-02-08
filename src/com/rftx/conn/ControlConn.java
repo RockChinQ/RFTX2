@@ -25,13 +25,13 @@ public class ControlConn extends AbstractConn {
     public void post(String taskToken,String localFile,String remoteFile)throws Exception{
         synchronized(this){
             if(identity==CLIENT){
-                var info=new FileTaskInfo();
+                FileTaskInfo info=new FileTaskInfo();
                 info.taskToken=taskToken;
                 info.localPath=localFile;
                 info.size=new File(localFile).length();
                 info.remotePath=remoteFile;
                 info.progress=0;
-                var transportConn=new TransportConn(host, TransportConn.SENDER,info,this);
+                TransportConn transportConn=new TransportConn(host, TransportConn.SENDER,info,this);
                 transportConn.launchByClient=true;
                 host.transportConns.add(transportConn);
                 //create conn for this
@@ -52,12 +52,12 @@ public class ControlConn extends AbstractConn {
     public void get(String taskToken,String localFile,String remoteFile)throws Exception{
         synchronized(this){
             if(identity==CLIENT){
-                var info=new FileTaskInfo();
+                FileTaskInfo info=new FileTaskInfo();
                 info.taskToken=taskToken;
                 info.localPath=localFile;
                 info.remotePath=remoteFile;
                 info.progress=0;
-                var transportConn=new TransportConn(host, TransportConn.RECEIVER,info,this);
+                TransportConn transportConn=new TransportConn(host, TransportConn.RECEIVER,info,this);
                 transportConn.launchByClient=true;
                 host.transportConns.add(transportConn);
                 //create conn for this
@@ -150,7 +150,7 @@ public class ControlConn extends AbstractConn {
                         if(!authed){
                             break;
                         }
-                        var info = new FileTaskInfo();
+                        FileTaskInfo info = new FileTaskInfo();
                         info.taskToken=cmd[1];
                         info.localPath=cmd[3];
                         info.remotePath=cmd[2];
@@ -174,7 +174,7 @@ public class ControlConn extends AbstractConn {
                             //index TransportConn and set file info
                             //server is a recveiver here!!!!
                             synchronized(host.transportConns){
-                                var transportConn=BasicInfo.indexTransportConnByTaskToken(host.transportConns, info.taskToken,TransportConn.RECEIVER);
+                                TransportConn transportConn=BasicInfo.indexTransportConnByTaskToken(host.transportConns, info.taskToken,TransportConn.RECEIVER);
                                 transportConn.info=info;
                                 transportConn.controlConnToNotify=this;
                                 synchronized(transportConn){
@@ -211,7 +211,7 @@ public class ControlConn extends AbstractConn {
                         }else if(identity==SERVER){
                             //server is a sender here!!!!!
                             synchronized(host.transportConns){
-                                var transportConn=BasicInfo.indexTransportConnByTaskToken(host.transportConns, info.taskToken,TransportConn.SENDER);
+                                TransportConn transportConn=BasicInfo.indexTransportConnByTaskToken(host.transportConns, info.taskToken,TransportConn.SENDER);
                                 transportConn.info=info;
                                 transportConn.controlConnToNotify=this;
                                 synchronized(transportConn){

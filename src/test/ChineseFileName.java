@@ -3,7 +3,7 @@ package test;
 import com.rftx.core.RFTXHost;
 import com.rftx.util.Debugger;
 
-public class ChinaeseFileName {
+public class ChineseFileName {
     static RFTXHost host = new RFTXHost("selftrans");
     public static void main(String[] args)throws Exception {
         Debugger.debug = true;
