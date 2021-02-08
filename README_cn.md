@@ -69,7 +69,8 @@ host.server.start();//使用此方法以启动RFTXServer的监听器
 ```
 
 - `RFTXHost`仅包含一个`RFTXServer`对象,重复调用`initServer(int port)`会覆盖已创建的`RFTXServer`导致未预料的异常,尤其是当server已经开始监听
-- 可以添加任意数量的合法token,客户端连接时会发送客户端的连接token以进行验证
+- 可以添加任意数量的合法token,客户端连接时会发送客户端的连接token以进行验证  
+- 若服务端不设置任何Token，意味着任何客户端将会被识别为无正确token的连接而被断开
 - 底层使用hashMap储存合法token,这意味的只能同时存在一个同名合法token
 
 #### 客户端
@@ -84,7 +85,7 @@ host.client.connect("testserver.ts",3000);//使用Client对象连接testserver.t
 
 - 除了`connect()`方法外,前两行都是持续性的修改`host`对象内的属性,在设置连接token之后,每次连接都将使用最新设置的token
 - 暂无释放`host`对象内`client`对象的方法
-- 不设置连接token或设置的token未被对端RFTXServer的token列表包含,此连接将在连接建立后立即自动被断开
+- 不设置连接token或设置的token未被对端RFTXServer的token列表包含,此连接将在连接建立后立即被断开
 
 ### 2.传输文件
 

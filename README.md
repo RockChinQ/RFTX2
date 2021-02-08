@@ -67,7 +67,8 @@ host.server.start();//Call this method to start the listener thread for RFTXServ
 ```
 
 - `RFTXHost`contains only one`RFTXServer`object. Repeatedly calling `initserver(int port)`will override the created `rftxserver`and cause unexpected exceptions, especially when the server has started listening
-- Any number of legal tokens can be added. When the client connects, the connection token of the client will be sent for authentication
+- Any number of valid tokens can be added. When the client connects, the connection token of the client will be sent for authentication  
+- When a server has no valid token set,any client will be identified as a connection without the correct token then disconnect.
 - The underlying program uses HashMap to store valid token, which means that only one valid token with the same name can exist at the same time
 
 #### Client
